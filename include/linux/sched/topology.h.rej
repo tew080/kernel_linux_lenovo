@@ -1,0 +1,13 @@
+--- include/linux/sched/topology.h
++++ include/linux/sched/topology.h
+@@ -195,9 +195,7 @@ struct sched_domain_topology_level {
+ };
+ 
+ extern void __init set_sched_topology(struct sched_domain_topology_level *tl);
+-static inline void sched_update_asym_prefer_cpu(int cpu, int old_prio, int new_prio)
+-{
+-}
++extern void sched_update_asym_prefer_cpu(int cpu, int old_prio, int new_prio);
+ 
+ 
+ # define SD_INIT_NAME(type)		.name = #type

@@ -1,0 +1,171 @@
+--- drivers/base/core.c
++++ drivers/base/core.c
+@@ -4823,7 +4823,7 @@ void device_shutdown(void)
+ 		spin_unlock(&devices_kset->list_lock);
+ 
+ 		/* hold lock to avoid race with probe/release */
+-		if (parent && dev->bus && dev->bus->need_parent_lock)
++		if (parent)
+ 			device_lock(parent);
+ 		device_lock(dev);
+ 
+@@ -4847,7 +4847,7 @@ void device_shutdown(void)
+ 		}
+ 
+ 		device_unlock(dev);
+-		if (parent && dev->bus && dev->bus->need_parent_lock)
++		if (parent)
+ 			device_unlock(parent);
+ 
+ 		put_device(dev);
+--- drivers/base/core.c
++++ drivers/base/core.c
+@@ -4857,36 +4892,7 @@ void device_shutdown(void)
+ 		list_del_init(&dev->kobj.entry);
+ 		spin_unlock(&devices_kset->list_lock);
+ 
+-		/* hold lock to avoid race with probe/release */
+-		if (parent && dev->bus && dev->bus->need_parent_lock)
+-			device_lock(parent);
+-		device_lock(dev);
+-
+-		/* Don't allow any more runtime suspends */
+-		pm_runtime_get_noresume(dev);
+-		pm_runtime_barrier(dev);
+-
+-		if (dev->class && dev->class->shutdown_pre) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown_pre\n");
+-			dev->class->shutdown_pre(dev);
+-		}
+-		if (dev->bus && dev->bus->shutdown) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown\n");
+-			dev->bus->shutdown(dev);
+-		} else if (dev->driver && dev->driver->shutdown) {
+-			if (initcall_debug)
+-				dev_info(dev, "shutdown\n");
+-			dev->driver->shutdown(dev);
+-		}
+-
+-		device_unlock(dev);
+-		if (parent && dev->bus && dev->bus->need_parent_lock)
+-			device_unlock(parent);
+-
+-		put_device(dev);
+-		put_device(parent);
++		shutdown_one_device(dev);
+ 
+ 		spin_lock(&devices_kset->list_lock);
+ 	}
+--- drivers/base/core.c
++++ drivers/base/core.c
+@@ -3542,6 +3543,7 @@ static int device_private_init(struct device *dev)
+ 	klist_init(&dev->p->klist_children, klist_children_get,
+ 		   klist_children_put);
+ 	INIT_LIST_HEAD(&dev->p->deferred_probe);
++	dev->p->shutdown_after = 0;
+ 	return 0;
+ }
+ 
+@@ -4824,12 +4828,61 @@ static void shutdown_one_device(struct device *dev)
+ 		put_device(dev->parent);
+ }
+ 
++static bool device_wants_async_shutdown(struct device *dev)
++{
++	if (dev->driver && dev->driver->async_shutdown_enable)
++		return true;
++
++	return false;
++}
++
++/**
++ * shutdown_one_device_async
++ * @data: the pointer to the struct device to be shutdown
++ * @cookie: not used
++ *
++ * Shuts down one device, after waiting for previous device to shut down (for
++ * synchronous shutdown) or waiting for device's last child or consumer to
++ * be shutdown (for async shutdown).
++ *
++ * shutdown_after is set to the shutdown cookie of the last child or consumer
++ * of this device (if any).
++ */
++static void shutdown_one_device_async(void *data, async_cookie_t cookie)
++{
++	struct device *dev = data;
++	async_cookie_t wait = cookie;
++
++	if (device_wants_async_shutdown(dev)) {
++		wait = dev->p->shutdown_after + 1;
++		/*
++		 * To prevent system hang, revert to sync shutdown in the event
++		 * that shutdown_after would make this shutdown wait for a
++		 * shutdown that hasn't been scheduled yet.
++		 *
++		 * This can happen if a parent or supplier is not ordered in the
++		 * devices_kset list before a child or consumer, which is not
++		 * expected.
++		 */
++		if (wait > cookie) {
++			wait = cookie;
++			dev_warn(dev, "Unsafe shutdown ordering, forcing sync order\n");
++		}
++	}
++
++	async_synchronize_cookie_domain(wait, &sd_domain);
++	shutdown_one_device(dev);
++}
++
+ /**
+  * device_shutdown - call ->shutdown() on each device to shutdown.
+  */
+ void device_shutdown(void)
+ {
+ 	struct device *dev, *parent;
++	async_cookie_t cookie;
++	struct device_link *link;
++	int idx;
+ 
+ 	wait_for_device_probe();
+ 	device_block_probing();
+@@ -4860,11 +4913,37 @@ void device_shutdown(void)
+ 		list_del_init(&dev->kobj.entry);
+ 		spin_unlock(&devices_kset->list_lock);
+ 
+-		shutdown_one_device(dev);
++		get_device(dev);
++		get_device(parent);
++
++		cookie = async_schedule_domain(shutdown_one_device_async,
++					       dev, &sd_domain);
++		/*
++		 * Ensure any parent & suppliers will wait for this device to
++		 * shut down
++		 */
++		if (parent) {
++			parent->p->shutdown_after = cookie;
++			put_device(parent);
++		}
++
++		idx = device_links_read_lock();
++		list_for_each_entry_rcu(link, &dev->links.suppliers, c_node,
++				device_links_read_lock_held()) {
++			/*
++			 * sync_state_only devlink consumers aren't dependent on
++			 * suppliers
++			 */
++			if (!device_link_flag_is_sync_state_only(link->flags))
++				link->supplier->p->shutdown_after = cookie;
++		}
++		device_links_read_unlock(idx);
++		put_device(dev);
+ 
+ 		spin_lock(&devices_kset->list_lock);
+ 	}
+ 	spin_unlock(&devices_kset->list_lock);
++	async_synchronize_full_domain(&sd_domain);
+ }
+ 
+ /*

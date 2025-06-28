@@ -1,0 +1,38 @@
+--- kernel/sched/syscalls.c
++++ kernel/sched/syscalls.c
+@@ -1587,13 +1823,34 @@ SYSCALL_DEFINE3(sched_getaffinity, pid_t, pid, unsigned int, len,
+ 
+ static void do_sched_yield(void)
+ {
+-	struct rq_flags rf;
+ 	struct rq *rq;
++	struct rq_flags rf;
++
++#ifdef CONFIG_SCHED_ALT
++	struct task_struct *p;
++
++	if (!sched_yield_type)
++		return;
+ 
+ 	rq = this_rq_lock_irq(&rf);
+ 
++	schedstat_inc(rq->yld_count);
++
++	p = current;
++	if (rt_task(p)) {
++		if (task_on_rq_queued(p))
++			requeue_task(p, rq);
++	} else if (rq->nr_running > 1) {
++		do_sched_yield_type_1(p, rq);
++		if (task_on_rq_queued(p))
++			requeue_task(p, rq);
++	}
++#else /* !CONFIG_SCHED_ALT */
++	rq = this_rq_lock_irq(&rf);
++
+ 	schedstat_inc(rq->yld_count);
+ 	current->sched_class->yield_task(rq);
++#endif /* !CONFIG_SCHED_ALT */
+ 
+ 	preempt_disable();
+ 	rq_unlock_irq(rq, &rf);

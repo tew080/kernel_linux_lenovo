@@ -1,0 +1,51 @@
+--- kernel/sched/sched.h
++++ kernel/sched/sched.h
+@@ -3596,24 +3596,41 @@ static inline void mm_cid_put(struct mm_struct *mm)
+ 	__mm_cid_put(mm, mm_cid_clear_lazy_put(cid));
+ }
+ 
+-static inline int __mm_cid_try_get(struct mm_struct *mm)
++static inline int __mm_cid_try_get(struct task_struct *t, struct mm_struct *mm)
+ {
+-	struct cpumask *cpumask;
+-	int cid;
++	struct cpumask *cidmask = mm_cidmask(mm);
++	struct mm_cid __percpu *pcpu_cid = mm->pcpu_cid;
++	int cid = __this_cpu_read(pcpu_cid->recent_cid);
+ 
+-	cpumask = mm_cidmask(mm);
++	/* Try to re-use recent cid. This improves cache locality. */
++	if (!mm_cid_is_unset(cid) && !cpumask_test_and_set_cpu(cid, cidmask))
++		return cid;
++	/*
++	 * Expand cid allocation if the maximum number of concurrency
++	 * IDs allocated (max_nr_cid) is below the number cpus allowed
++	 * and number of threads. Expanding cid allocation as much as
++	 * possible improves cache locality.
++	 */
++	cid = atomic_read(&mm->max_nr_cid);
++	while (cid < READ_ONCE(mm->nr_cpus_allowed) && cid < atomic_read(&mm->mm_users)) {
++		if (!atomic_try_cmpxchg(&mm->max_nr_cid, &cid, cid + 1))
++			continue;
++		if (!cpumask_test_and_set_cpu(cid, cidmask))
++			return cid;
++	}
+ 	/*
++	 * Find the first available concurrency id.
+ 	 * Retry finding first zero bit if the mask is temporarily
+ 	 * filled. This only happens during concurrent remote-clear
+ 	 * which owns a cid without holding a rq lock.
+ 	 */
+ 	for (;;) {
+-		cid = cpumask_first_zero(cpumask);
+-		if (cid < nr_cpu_ids)
++		cid = cpumask_first_zero(cidmask);
++		if (cid < READ_ONCE(mm->nr_cpus_allowed))
+ 			break;
+ 		cpu_relax();
+ 	}
+-	if (cpumask_test_and_set_cpu(cid, cpumask))
++	if (cpumask_test_and_set_cpu(cid, cidmask))
+ 		return -1;
+ 
+ 	return cid;

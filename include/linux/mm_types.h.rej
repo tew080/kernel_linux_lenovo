@@ -1,0 +1,30 @@
+--- include/linux/mm_types.h
++++ include/linux/mm_types.h
+@@ -853,6 +854,27 @@ struct mm_struct {
+ 		 * When the next mm_cid scan is due (in jiffies).
+ 		 */
+ 		unsigned long mm_cid_next_scan;
++		/**
++		 * @nr_cpus_allowed: Number of CPUs allowed for mm.
++		 *
++		 * Number of CPUs allowed in the union of all mm's
++		 * threads allowed CPUs.
++		 */
++		unsigned int nr_cpus_allowed;
++		/**
++		 * @max_nr_cid: Maximum number of concurrency IDs allocated.
++		 *
++		 * Track the highest number of concurrency IDs allocated for the
++		 * mm.
++		 */
++		atomic_t max_nr_cid;
++		/**
++		 * @cpus_allowed_lock: Lock protecting mm cpus_allowed.
++		 *
++		 * Provide mutual exclusion for mm cpus_allowed and
++		 * mm nr_cpus_allowed updates.
++		 */
++		raw_spinlock_t cpus_allowed_lock;
+ #endif
+ #ifdef CONFIG_MMU
+ 		atomic_long_t pgtables_bytes;	/* size of all page tables */
