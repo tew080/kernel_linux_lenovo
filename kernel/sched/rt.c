@@ -18,7 +18,11 @@ int sysctl_sched_rt_period = 1000000;
  * part of the period that we allow rt tasks to run in us.
  * default: 0.95s
  */
+#ifdef CONFIG_TWEAKS
+int sysctl_sched_rt_runtime = 980000;
+#else
 int sysctl_sched_rt_runtime = 950000;
+#endif
 
 #ifdef CONFIG_SYSCTL
 static int sysctl_sched_rr_timeslice = (MSEC_PER_SEC * RR_TIMESLICE) / HZ;

@@ -7,7 +7,8 @@
  * SPDX-License-Identifier: GPL-2.0
  */
 
-#define IOWAIT_BOOST_MIN	(SCHED_CAPACITY_SCALE / 4) /* Increased for faster IO response */
+#define IOWAIT_BOOST_MIN	(SCHED_CAPACITY_SCALE / 8) /* Increased for faster IO response */
+#define RATE_LIMIT_US 10000
 
 struct sugov_tunables {
 	struct gov_attr_set	attr_set;
@@ -594,7 +595,7 @@ static int sugov_init(struct cpufreq_policy *policy)
 		goto stop_kthread;
 	}
 
-	tunables->rate_limit_us = 2000; /* 2ms for low latency */
+	tunables->rate_limit_us = RATE_LIMIT_US;
 
 	policy->governor_data = sg_policy;
 	sg_policy->tunables = tunables;

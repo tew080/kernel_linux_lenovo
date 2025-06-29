@@ -4,7 +4,12 @@
  * Auto-group scheduling implementation:
  */
 
+#ifdef CONFIG_TWEAKS
+unsigned int __read_mostly sysctl_sched_autogroup_enabled = 0;
+#else
 unsigned int __read_mostly sysctl_sched_autogroup_enabled = 1;
+#endif
+
 static struct autogroup autogroup_default;
 static atomic_t autogroup_seq_nr;
 

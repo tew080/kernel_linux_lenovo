@@ -1091,6 +1091,9 @@ static const struct ctl_table swap_sysctl_table[] = {
  */
 void __init swap_setup(void)
 {
+#ifdef CONFIG_TWEAKS
+	page_cluster = 0;
+#else
 	unsigned long megs = totalram_pages() >> (20 - PAGE_SHIFT);
 
 	/* Use a smaller cluster for small-memory machines */
@@ -1102,6 +1105,6 @@ void __init swap_setup(void)
 	 * Right now other parts of the system means that we
 	 * _really_ don't want to cluster much more
 	 */
-
+#endif
 	register_sysctl_init("vm", swap_sysctl_table);
 }

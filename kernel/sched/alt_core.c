@@ -4432,9 +4432,12 @@ void alt_sched_debug(void)
 #ifdef CONFIG_PREEMPT_RT
 #define SCHED_NR_MIGRATE_BREAK 8
 #else
+#ifdef CONFIG_TWEAKS
+#define SCHED_NR_MIGRATE_BREAK 128
+#else
 #define SCHED_NR_MIGRATE_BREAK 32
 #endif
-
+#endif
 __read_mostly unsigned int sysctl_sched_nr_migrate = SCHED_NR_MIGRATE_BREAK;
 
 /*
