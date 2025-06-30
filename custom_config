@@ -6937,7 +6937,6 @@ CONFIG_FB_EFI=y
 # CONFIG_FB_S1D13XXX is not set
 CONFIG_FB_NVIDIA=m
 CONFIG_FB_NVIDIA_I2C=y
-
 CONFIG_FB_NVIDIA_BACKLIGHT=y
 # CONFIG_FB_RIVA is not set
 # CONFIG_FB_I740 is not set
@@ -12032,7 +12031,7 @@ CONFIG_ZBLOCK=y
 #################################################
 # Media Driver
 #################################################
-# CONFIG_V4L2_LOOPBACK is not set
+CONFIG_V4L2_LOOPBACK=y
 #################################################
 # CONFIG_CMDLINE_BOOL is not set
 # CONFIG_CMDLINE_OVERRIDE is not set
@@ -12134,7 +12133,7 @@ CONFIG_UCLAMP_TASK_GROUP=y
 CONFIG_UCLAMP_BUCKETS_COUNT=5
 #################################################
 # CONFIG_X86_X32_ABI is not set
-# CONFIG_X86_KERNEL_IBT is not set
+CONFIG_X86_KERNEL_IBT=y
 #################################################
 CONFIG_REGULATOR_DA903X=m
 # CONFIG_READABLE_ASM is not set
