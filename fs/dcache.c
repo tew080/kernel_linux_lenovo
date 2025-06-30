@@ -73,8 +73,11 @@
  * If no ancestor relationship:
  * arbitrary, since it's serialized on rename_lock
  */
+#ifdef CONFIG_TWEAKS
+static int sysctl_vfs_cache_pressure __read_mostly = 50;
+#else
 static int sysctl_vfs_cache_pressure __read_mostly = 100;
-
+#endif
 unsigned long vfs_pressure_ratio(unsigned long val)
 {
 	return mult_frac(val, sysctl_vfs_cache_pressure, 100);

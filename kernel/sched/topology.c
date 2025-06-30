@@ -206,7 +206,11 @@ sd_parent_degenerate(struct sched_domain *sd, struct sched_domain *parent)
 
 #if defined(CONFIG_ENERGY_MODEL) && defined(CONFIG_CPU_FREQ_GOV_SCHEDUTIL)
 DEFINE_STATIC_KEY_FALSE(sched_energy_present);
+#ifdef CONFIG_TWEAKS
+static unsigned int sysctl_sched_energy_aware = 0;
+#else
 static unsigned int sysctl_sched_energy_aware = 1;
+#endif
 static DEFINE_MUTEX(sched_energy_mutex);
 static bool sched_energy_update;
 
