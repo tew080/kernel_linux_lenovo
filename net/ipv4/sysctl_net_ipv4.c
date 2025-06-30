@@ -49,7 +49,11 @@ static int tcp_plb_max_cong_thresh = 256;
 static unsigned int tcp_tw_reuse_delay_max = TCP_PAWS_MSL * MSEC_PER_SEC;
 
 /* obsolete */
+#ifdef CONFIG_TWEAKS
+static int sysctl_tcp_low_latency __read_mostly = 1;
+#else
 static int sysctl_tcp_low_latency __read_mostly;
+#endif
 
 /* Update system visible IP port range */
 static void set_local_port_range(struct net *net, unsigned int low, unsigned int high)
