@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#sudo apt install git libncurses-dev curl gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm bc rsync whiptail jq pahole debhelper
+#sudo apt install git libncurses-dev curl gawk flex bison openssl libssl-dev dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf llvm bc rsync whiptail jq pahole debhelper libdw-dev libdwarf-dev
 
 #cp /boot/config-$(uname -r) ~/kernel-config
 
