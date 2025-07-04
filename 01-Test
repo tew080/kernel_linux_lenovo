@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+#cp /boot/config-$(uname -r) ~/kernel-config
+
 #dpkg --list | grep linux-image && dpkg --list | grep linux-headers
 #sudo apt remove --purge
 #sudo update-grub
