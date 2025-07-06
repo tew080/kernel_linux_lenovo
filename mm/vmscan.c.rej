@@ -1,0 +1,36 @@
+--- mm/vmscan.c
++++ mm/vmscan.c
+@@ -7452,17 +7430,9 @@ void __meminit kswapd_stop(int nid)
+ 		kthread_stop(kswapd);
+ 		pgdat->kswapd = NULL;
+ 	}
+-	if (pgdat->kcompressd) {
+-		kthread_stop(pgdat->kcompressd);
+-		pgdat->kcompressd = NULL;
+-		kfifo_free(&pgdat->kcompress_fifo);
+-	}
+ 	pgdat_kswapd_unlock(pgdat);
+ }
+ 
+-int vm_kcompressd = 24;
+-static int SYSCTL_KCOMPRESS_FIFO_SIZE = KCOMPRESS_FIFO_SIZE;
+-
+ static const struct ctl_table vmscan_sysctl_table[] = {
+ 	{
+ 		.procname	= "swappiness",
+@@ -7473,15 +7443,6 @@ static const struct ctl_table vmscan_sysctl_table[] = {
+ 		.extra1		= SYSCTL_ZERO,
+ 		.extra2		= SYSCTL_TWO_HUNDRED,
+ 	},
+-	{
+-		.procname	= "kcompressd",
+-		.data		= &vm_kcompressd,
+-		.maxlen		= sizeof(int),
+-		.mode		= 0644,
+-		.proc_handler = proc_dointvec_minmax,
+-		.extra1		= SYSCTL_ZERO,
+-		.extra2		= &SYSCTL_KCOMPRESS_FIFO_SIZE,
+-	},
+ #ifdef CONFIG_NUMA
+ 	{
+ 		.procname	= "zone_reclaim_mode",

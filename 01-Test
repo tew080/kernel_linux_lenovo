@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+#cp /boot/config-$(uname -r) ~/kernel-config
+
+#dpkg --list | grep linux-image && dpkg --list | grep linux-headers
+#sudo apt remove --purge
+#sudo update-grub
+
+#patch -p1 < patch/
+#patch -p1 -R < patch/
+
+#cd ~/kernel/test/linux-6.15.3/tools/perf
+#sudo ./perf record -e cycles:k -a
+
+#sudo ./perf report
+#sudo ./perf script > perf.unfolded
+
+#create_llvm_prof --binary=./vmlinux --profile=perf.data --out=kernel.afdo
+#llvm-profdata merge -output=kernel.profdata kernel.afdo
+
+#cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_driver
+#cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+#cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+
+#cat /sys/block/nvme0n1/queue/scheduler
+
+#sysctl net.ipv4.tcp_congestion_control
+
+#cat /sys/devices/system/cpu/cpuidle/current_driver
+
+#cat /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference
+
+#sudo apt remove --purge 'nvidia-dkms-*'
+#sudo apt install nvidia-driver-575
+#sudo dkms remove nvidia/575.57.08 --all
+#sudo apt remove --purge nvidia-dkms-*
+#sudo apt autoremove
+#sudo rm -rf /etc/modprobe.d/nvidia*
+#sudo rm -rf /etc/modules-load.d/nvidia*
+#sudo rm -rf /var/lib/dkms/nvidia*
+#sudo apt autoclean
+
+#sudo ubuntu-drivers devices
+#sudo ubuntu-drivers autoinstall
+#sudo apt install nvidia-driver-
+
+if [[ $1 = "-c" || $1 = "--clean" ]]; then
+make clean
+make mrproper
+fi
+
+tool="/usr"
+
+#export LLVM=1
+#export LLVM_IAS=1
+export CC=/usr/bin/gcc-
+export CXX=/usr/bin/g++-
+export HOSTCC=/usr/bin/gcc-
+export HOSTCXX=/usr/bin/g++-
+export LD=/usr/bin/ld
+export AR=/usr/bin/ar
+export NM=/usr/bin/nm
+export STRIP=/usr/bin/strip
+export OBJCOPY=/usr/bin/objcopy
+export OBJDUMP=/usr/bin/objdump
+export READELF=/usr/bin/readelf
+export HOSTAR=/usr/bin/ar
+export HOSTLD=/usr/bin/ld
+
+export PATH=$tool/bin:$PATH
+#export CFLAGS=--target=x86_64-linux-gnu
+#export CXXFLAGS=--target=x86_64-linux-gnu
+#export DEB_BUILD_GNU_TYPE=x86_64-linux-gnu
+
+#export KBUILD_NO_SYNC_CONFIG=1
+#export KCONFIG_NOTIMESTAMP=1
+#export KCONFIG_CONFIG="custom_config"
+#export KCONFIG_OVERWRITECONFIG=1
+#export KCONFIG_AUTOCONFIG=0
+
+#KERNEL_DIR="linux-6.15.2"
+#CONFIG_FILE="custom_config"
+
+#cd "$KERNEL_DIR" || { echo "เข้าโฟลเดอร์ Kernel ไม่ได้"; exit 1; }
+
+#cp "../$CONFIG_FILE" .config
+
+#echo "[INFO] ใช้ config: .config (จาก $CONFIG_FILE)"
+
+#cp /home/tew/kernel/test/custom_config
+
+#echo "[INFO] คอมไพล์ kernel เป็น .deb"
+
+cp kernel-config .config
+
+#make custom_config savedefconfig
+
+#scripts/kconfig/merge_config.sh -m -r .config custom.config
+
+clang="KDEB_NO_SOURCE_PACKAGE=1 NO_SOURCE=1 \
+    KBUILD_NO_SYNC_CONFIG=1 KCONFIG_NOTIMESTAMP=1 \
+    KCONFIG_OVERWRITECONFIG=1 \
+    LLVM=1 LLVM_IAS=1 bindeb-pkg "
+
+gcc="KDEB_NO_SOURCE_PACKAGE=1 NO_SOURCE=1 \
+    KBUILD_NO_SYNC_CONFIG=1 KCONFIG_NOTIMESTAMP=1 \
+    KCONFIG_OVERWRITECONFIG=1 \
+    bindeb-pkg "
+
+#make -j$(nproc) modules
+
+#make -j$(nproc) $gcc INSTALL_MOD_PATH=modules INSTALL_MOD_STRIP=1 modules_install
+
+make -j$(nproc) $gcc 
+
+echo "[✅]"
+
+
