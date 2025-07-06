@@ -12714,6 +12714,9 @@ CONFIG_SYSTEM_REVOCATION_KEYS=""
 # low letency setup
 #################################################
 CONFIG_RCU_NOCB_CPU_DEFAULT_ALL=y
+CONFIG_CMDLINE_BOOL=y
+CONFIG_CMDLINE="threadirqs"
+# CONFIG_CMDLINE_OVERRIDE is not set
 
 #################################################
 # Tweaks
