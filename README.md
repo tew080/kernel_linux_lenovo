@@ -1,1 +1,2 @@
-custom for lenovo intel (performance, lowletency)
+- custom for lenovo intel (performance, lowletency)
+- othor device not test
