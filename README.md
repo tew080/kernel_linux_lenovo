@@ -1,1 +1,1 @@
-# 1
+custom for lenovo intel (performance, lowletency)
