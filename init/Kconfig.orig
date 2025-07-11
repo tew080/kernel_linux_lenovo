@@ -226,7 +226,7 @@ config LOCALVERSION
 
 config LOCALVERSION_AUTO
 	bool "Automatically append version information to the version string"
-	default y
+	default n
 	depends on !COMPILE_TEST
 	help
 	  This will try to automatically determine if the current tree is a
@@ -978,6 +978,10 @@ config NUMA_BALANCING
 
 	  This system will be inactive on UMA systems.
 
+config SCHED_CACHE
+	bool "Cache aware scheduler"
+	default n
+
 config NUMA_BALANCING_DEFAULT_ENABLED
 	bool "Automatically enable NUMA aware memory/task placement"
 	default y
@@ -1586,7 +1590,7 @@ config HAVE_PCSPKR_PLATFORM
 menuconfig EXPERT
 	bool "Configure standard kernel features (expert users)"
 	# Unhide debug options, to make the on-by-default options visible
-	select DEBUG_KERNEL
+	#select DEBUG_KERNEL
 	help
 	  This option allows certain base kernel options and settings
 	  to be disabled or tweaked. This is for specialized
